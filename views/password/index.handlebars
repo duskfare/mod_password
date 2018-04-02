@@ -1,0 +1,90 @@
+ {{{{angular}}}}
+<script src="/modules/password/static/md5.js"></script>
+<script>
+    app.controller('passwordCtrl', function ($scope) {
+        $scope.name = "";
+        $scope.password = "__________";
+        $scope.special_char_count = 1;
+        $scope.UIGeneratePassword = function () {
+            $scope.password = GeneratePassword($scope.username, $scope.secret, $scope.special_char_count,
+                $scope.extension);
+        }
+
+        function GeneratePassword(username, secret, special_char_count, ext) {
+            if (username && secret) {
+                const seed = '][';
+                const MD5_LENGTH = 32;
+                const max_len = Math.min(MD5_LENGTH, secret.length);
+                var key = md5(username + seed + secret);
+                var specialchars = "`-=[]\\;\',./!@#$%^&*()_+{}|:\"<>?";
+
+
+                //Generate the alphanumeric components of the password
+                var password = key.substring(0, max_len); //Base password generation
+                for (var idx in ext) {
+                    var char = ext[idx];
+                    password += md5(username + char + secret);
+                }
+
+                //Select characters to be transformed
+                var current_special_char_count = 0;
+                for (var idx in password) {
+                    var selected_special_char = password.charCodeAt(idx) % specialchars.length;
+                    var special_char = specialchars[selected_special_char];
+                    password += special_char;
+                    current_special_char_count++;
+                    if (current_special_char_count >= special_char_count) {
+                        break;
+                    }
+                }
+                return password;
+            } else {
+                return 'Unable to generate password.';
+            }
+        }
+    });
+</script>
+
+<style>
+    .pw-label {
+        width: 40px;
+    }
+
+    .pw-form-container {
+        width: 150px;
+    }
+</style>
+
+<body>
+    <div>
+        <div ng-controller="passwordCtrl" layout="column">
+            <form ng-submit="UIGeneratePassword()" class="pw-form-container">
+                <label>Username:</label>
+                <input type="text" ng-model="username" autofocus>
+                <br>
+                <br>
+                <label class="pw-label">Secret:</label>
+                <input type="password" ng-model="secret">
+                <br>
+                <br>
+                <label class="pw-label">Special Character Count:</label>
+                <input type="text" ng-model="special_char_count">
+                <br>
+                <br>
+                <label>Extend (Optional):</label>
+                <input type="text" ng-model="extension">
+                <br>
+                <br>
+                <md-button ng-click="UIGeneratePassword()" class="md-raised md-primary">Generate</md-button>
+                <br>
+                <br>
+                <input type="submit" style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+            </form>
+            <div>
+                <label>Password:</label>
+                <input onClick="this.select();" value={{password}} readonly />
+            </div>
+        </div>
+    </div>
+</body>
+{{{{/angular}}}}
